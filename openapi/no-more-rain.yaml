@@ -1,0 +1,131 @@
+openapi: 3.0.0
+info:
+  title: "No more rain API"
+  description:
+   This API provides attraction search along with weather and air quality information to help you plan your trip.
+  version: 2.0.0
+servers:
+  - url: http://127.0.0.1:8080/no-more-rain/v1
+paths:
+  /search:
+    get:
+      operationId: controller.search
+      parameters:
+        - name: keywords
+          in: query
+          schema:
+            type: string
+          required: true
+        - name: geolocation
+          in: query
+          schema:
+            type: string
+            format: '^\d+\.?\d*,\d+\.?\d*$'
+          required: true
+        - name: search_radius
+          in: query
+          schema:
+            type: number
+          required: false
+        - name: number_of_result
+          in: query
+          schema:
+            type: number
+            default: 50
+          required: false
+        - name: page
+          in: query
+          schema:
+            type: number
+            default: 1
+          required: false
+      summary: Search for attraction details
+      responses:
+        200:
+          description: Attraction list based on parameters
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AttractionSearchResult'
+  /attractions/{attractionId}:
+    get:
+      operationId: controller.get_attraction_detail
+      parameters:
+        - name: attractionId
+          in: path
+          description: Attraction ID from TAT API
+          required: true
+          schema:
+            type: string
+      summary: Get at attraction detail, weather, and air quality
+      responses:
+        200:
+          description: Attraction detail along weather and air quality information
+          content:
+            application/json:
+              schema:
+                  $ref: '#/components/schemas/AttractionDetailResult'
+                
+
+components:
+  schemas:
+    AttractionSearchResult:
+      type: object
+      properties:
+        place_id:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+        destination:
+          type: string
+        thumbnail_url:
+          type: string
+        location:
+          type: object # address just like home address
+    AttractionDetailResult:
+      type: object
+      properties:
+        place_id:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+        destination:
+          type: string
+        thumbnail_url:
+          type: string
+        location:
+          type: object
+        contact:
+          type: array
+          items:
+            type: string
+        forecasts:
+          type: array
+          items:
+            $ref : '#/components/schemas/WeatherDetail'
+    WeatherDetail:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        temp_max:
+          type: number
+        temp_min:
+          type: number
+        avg_pm25:
+          type: number
+        avg_pm10:
+          type: number
+      
+        
+        
+    
+      
+    
