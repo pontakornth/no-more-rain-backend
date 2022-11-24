@@ -1,9 +1,14 @@
 import os
 import sys
+import time
+
+from rest_framework import status
+
 from swagger_server import models
 import dotenv
 import requests
 from flask import abort
+from datetime import datetime, timedelta
 
 sys.path.append('stub')
 dotenv.load_dotenv()
@@ -38,7 +43,7 @@ def search(keywords, geolocation, search_radius=20, number_of_result=50, page=1)
         f'{geo_data[1]}&categorycodes=ATTRACTION&radius={search_radius}&numberOfResult={int(number_of_result)}'
         f'&pagenumber={int(page)}', headers=headers)
 
-    if response.status_code == 404:
+    if response.status_code == status.HTTP_404_NOT_FOUND:
         abort(404)
 
     json_result = response.json()
@@ -55,14 +60,14 @@ def get_attraction_detail(attraction_id: str):
 
     :rtype: AttractionDetailResult
     """
-    headers = {
+    tat_headers = {
         "Authorization": f"Bearer {TAT_API_KEY}",
         "Accept-Language": "EN"
     }
     tat_response = requests.get(f'https://tatapi.tourismthailand.org/tatapi/v5/attraction/{attraction_id}',
-                            headers=headers)
+                                headers=tat_headers)
     # No data for that attraction
-    if tat_response.status_code == 404:
+    if tat_response.status_code == status.HTTP_404_NOT_FOUND:
         abort(404)
 
     tat_response_json = tat_response.json()
@@ -74,10 +79,45 @@ def get_attraction_detail(attraction_id: str):
     location = tat_response_json['result']['location']
     contact = tat_response_json['result']['contact']
 
-    tmd_response = ...
+    now = datetime.now()
+    # forecast = datetime.now() + timedelta(days=6)
+    date = now.strftime("%Y-%m-%d")
+    # forecast_date = forecast.strftime("%Y-%m-%d")
 
-    aqicn_response = ...
+    tmd_headers = {
+        'accept': 'application/json',
+        'authorization': f"Bearer {TMD_API_KEY}"
+    }
 
+    # TODO: Make request success -> currently error
+    tmd_response = requests.get(
+        f'https://data.tmd.go.th/nwpapi/v1/forecast/location/daily/at?lat={lat}&lon={lon}&duration=7',
+        headers=tmd_headers)
+    if tmd_response.status_code == status.HTTP_404_NOT_FOUND:
+        abort(404)
+    tmd_response_json = tmd_response.json()
+    # TODO: get forecasts max temp, min temp after fix the above problem
+    temp_max = ...
+    temp_min = ...
 
-    # result = [place_id, lat, lon, destination, thumbnail_url, location, contact]
-    # return result
+    aqicn_response = requests.get(f'https://api.waqi.info/feed/geo:{lat};{lon}/?token={AQI_CN_API_KEY}')
+    if aqicn_response.status_code == status.HTTP_404_NOT_FOUND:
+        abort(404)
+    aqicn_response_json = aqicn_response.json()
+    current_date = time.strptime(date, "%Y-%m-%d")
+
+    pm25_data = aqicn_response_json['data']['forecast']['daily']['pm25']
+    for data in pm25_data:
+        date_of_data = time.strptime(data['day'], "%Y-%m-%d")
+        if current_date > date_of_data:
+            pm25_data.remove(data)
+
+    pm10_data = aqicn_response_json['data']['forecast']['daily']['pm10']
+    for data in pm10_data:
+        date_of_data = time.strptime(data['day'], "%Y-%m-%d")
+        if current_date > date_of_data:
+            pm10_data.remove(data)
+
+    # TODO: loop through models
+    result = models.AttractionDetailResult(place_id, lat, lon, destination, thumbnail_url, location, contact)
+    return result
