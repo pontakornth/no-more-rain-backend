@@ -92,6 +92,8 @@ components:
           type: number
         destination:
           type: string
+        place_name:
+          type: string
         thumbnail_url:
           type: string
         location:
@@ -100,6 +102,8 @@ components:
       type: object
       properties:
         place_id:
+          type: string
+        place_name:
           type: string
         latitude:
           type: number

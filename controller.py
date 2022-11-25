@@ -2,7 +2,6 @@ import os
 import sys
 import time
 
-
 from swagger_server import models
 import dotenv
 import requests
@@ -51,8 +50,9 @@ def search(keywords, geolocation, provincename, destination, search_radius=20, n
 
     json_result = response.json()
     result = [
-        models.AttractionSearchResult(result['place_id'], result['latitude'], result['longitude'], result['destination'],
-                                      result['thumbnail_url'], result['location'])
+        models.AttractionSearchResult(result['place_id'], result['latitude'], result['longitude'],
+                                      result['destination'], result['place_name'], result['thumbnail_url'],
+                                      result['location'])
         for result in json_result['result']
     ]
     return result
@@ -78,6 +78,7 @@ def get_attraction_detail(attraction_id: str):
     lat = tat_response_json['result']['latitude']
     lon = tat_response_json['result']['longitude']
     destination = tat_response_json['result']['destination']
+    place_name = tat_response_json['result']['place_name']
     thumbnail_url = tat_response_json['result']['thumbnail_url']
     location = tat_response_json['result']['location']
     contact = tat_response_json['result']['contact']
@@ -126,6 +127,6 @@ def get_attraction_detail(attraction_id: str):
                              pm10_data[index][1])
         for index in range(7)
     ]
-    detail_result = models.AttractionDetailResult(place_id, lat, lon, destination, thumbnail_url, location, contact,
+    detail_result = models.AttractionDetailResult(place_id, place_name, lat, lon, destination, thumbnail_url, location, contact,
                                                   forecasts_result)
     return detail_result
