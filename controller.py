@@ -2,7 +2,6 @@ import os
 import sys
 import time
 
-from rest_framework import status
 
 from swagger_server import models
 import dotenv
@@ -43,7 +42,7 @@ def search(keywords, geolocation, search_radius=20, number_of_result=50, page=1)
         f'{geo_data[1]}&categorycodes=ATTRACTION&radius={search_radius}&numberOfResult={int(number_of_result)}'
         f'&pagenumber={int(page)}', headers=headers)
 
-    if response.status_code == status.HTTP_404_NOT_FOUND:
+    if response.status_code == 404:
         abort(404)
 
     json_result = response.json()
@@ -67,7 +66,7 @@ def get_attraction_detail(attraction_id: str):
     tat_response = requests.get(f'https://tatapi.tourismthailand.org/tatapi/v5/attraction/{attraction_id}',
                                 headers=tat_headers)
     # No data for that attraction
-    if tat_response.status_code == status.HTTP_404_NOT_FOUND:
+    if tat_response.status_code == 404:
         abort(404)
 
     tat_response_json = tat_response.json()
@@ -93,7 +92,7 @@ def get_attraction_detail(attraction_id: str):
     tmd_response = requests.get(
         f'https://data.tmd.go.th/nwpapi/v1/forecast/location/daily/at?lat={lat}&lon={lon}&duration=7',
         headers=tmd_headers)
-    if tmd_response.status_code == status.HTTP_404_NOT_FOUND:
+    if tmd_response.status_code == 404:
         abort(404)
     tmd_response_json = tmd_response.json()
     # TODO: get forecasts max temp, min temp after fix the above problem
@@ -101,7 +100,7 @@ def get_attraction_detail(attraction_id: str):
     temp_min = ...
 
     aqicn_response = requests.get(f'https://api.waqi.info/feed/geo:{lat};{lon}/?token={AQI_CN_API_KEY}')
-    if aqicn_response.status_code == status.HTTP_404_NOT_FOUND:
+    if aqicn_response.status_code == 404:
         abort(404)
     aqicn_response_json = aqicn_response.json()
     current_date = time.strptime(date, "%Y-%m-%d")
