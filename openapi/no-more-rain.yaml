@@ -22,6 +22,16 @@ paths:
             type: string
             format: '^\d+\.?\d*,\d+\.?\d*$'
           required: true
+        - name: provincename
+          in: query
+          schema:
+            type: string
+          required: true
+        - name: destination
+          in: query
+          schema:
+            type: string
+          required: true
         - name: search_radius
           in: query
           schema:
@@ -123,9 +133,3 @@ components:
           type: number
         avg_pm10:
           type: number
-      
-        
-        
-    
-      
-    
