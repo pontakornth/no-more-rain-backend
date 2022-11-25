@@ -7,7 +7,7 @@ from swagger_server import models
 import dotenv
 import requests
 from flask import abort
-from datetime import datetime, timedelta
+from datetime import datetime
 
 sys.path.append('stub')
 dotenv.load_dotenv()
@@ -59,6 +59,7 @@ def get_attraction_detail(attraction_id: str):
 
     :rtype: AttractionDetailResult
     """
+    # TAT API request
     tat_headers = {
         "Authorization": f"Bearer {TAT_API_KEY}",
         "Accept-Language": "EN"
@@ -68,7 +69,6 @@ def get_attraction_detail(attraction_id: str):
     # No data for that attraction
     if tat_response.status_code == 404:
         abort(404)
-
     tat_response_json = tat_response.json()
     place_id = tat_response_json['result']['place_id']
     lat = tat_response_json['result']['latitude']
@@ -78,45 +78,50 @@ def get_attraction_detail(attraction_id: str):
     location = tat_response_json['result']['location']
     contact = tat_response_json['result']['contact']
 
-    now = datetime.now()
-    # forecast = datetime.now() + timedelta(days=6)
-    date = now.strftime("%Y-%m-%d")
-    # forecast_date = forecast.strftime("%Y-%m-%d")
-
+    # TMD API request
     tmd_headers = {
         'accept': 'application/json',
         'authorization': f"Bearer {TMD_API_KEY}"
     }
-
-    # TODO: Make request success -> currently error
     tmd_response = requests.get(
-        f'https://data.tmd.go.th/nwpapi/v1/forecast/location/daily/at?lat={lat}&lon={lon}&duration=7',
-        headers=tmd_headers)
+        f'https://data.tmd.go.th/nwpapi/v1/forecast/location/daily/at?lat={lat}&lon={lon}&fields=tc_max,'
+        f'tc_min&duration=7', headers=tmd_headers)
     if tmd_response.status_code == 404:
         abort(404)
     tmd_response_json = tmd_response.json()
-    # TODO: get forecasts max temp, min temp after fix the above problem
-    temp_max = ...
-    temp_min = ...
+    tc_max_data = []
+    tc_min_data = []
+    for forecast_weather_data in tmd_response_json['WeatherForecasts'][0]['forecasts']:
+        tc_max_data.append(forecast_weather_data['data']['tc_max'])
+        tc_min_data.append(forecast_weather_data['data']['tc_min'])
 
+    now = datetime.now()
+    date = now.strftime("%Y-%m-%d")
+    current_date = time.strptime(date, "%Y-%m-%d")
+
+    # AQICN API request
     aqicn_response = requests.get(f'https://api.waqi.info/feed/geo:{lat};{lon}/?token={AQI_CN_API_KEY}')
     if aqicn_response.status_code == 404:
         abort(404)
     aqicn_response_json = aqicn_response.json()
-    current_date = time.strptime(date, "%Y-%m-%d")
 
-    pm25_data = aqicn_response_json['data']['forecast']['daily']['pm25']
-    for data in pm25_data:
+    pm25_data = []
+    for data in aqicn_response_json['data']['forecast']['daily']['pm25']:
         date_of_data = time.strptime(data['day'], "%Y-%m-%d")
-        if current_date > date_of_data:
-            pm25_data.remove(data)
+        if current_date <= date_of_data:
+            pm25_data.append([data['day'], data['avg']])
 
-    pm10_data = aqicn_response_json['data']['forecast']['daily']['pm10']
-    for data in pm10_data:
+    pm10_data = []
+    for data in aqicn_response_json['data']['forecast']['daily']['pm10']:
         date_of_data = time.strptime(data['day'], "%Y-%m-%d")
-        if current_date > date_of_data:
-            pm10_data.remove(data)
+        if current_date <= date_of_data:
+            pm10_data.append([data['day'], data['avg']])
 
-    # TODO: loop through models
-    result = models.AttractionDetailResult(place_id, lat, lon, destination, thumbnail_url, location, contact)
-    return result
+    forecasts_result = [
+        models.WeatherDetail(pm10_data[index][0], tc_max_data[index], tc_min_data[index], pm25_data[index][1],
+                             pm10_data[index][1])
+        for index in range(7)
+    ]
+    detail_result = models.AttractionDetailResult(place_id, lat, lon, destination, thumbnail_url, location, contact,
+                                                  forecasts_result)
+    return detail_result
