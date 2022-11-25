@@ -16,13 +16,17 @@ AQI_CN_API_KEY = os.environ.get('AQI_CN_API_KEY')
 TAT_API_KEY = os.environ.get('TAT_API_KEY')
 
 
-def search(keywords, geolocation, search_radius=20, number_of_result=50, page=1):
+def search(keywords, geolocation, provincename, destination, search_radius=20, number_of_result=50, page=1):
     """
 
     :param keywords:
     :type keywords: str
     :param geolocation:
     :type geolocation: str
+    :param provincename:
+    :type provincename:str
+    :param destination:
+    :type destination:str
     :param search_radius:
     :type search_radius: float
     :param number_of_result:
@@ -39,17 +43,17 @@ def search(keywords, geolocation, search_radius=20, number_of_result=50, page=1)
     }
     response = requests.get(
         f'https://tatapi.tourismthailand.org/tatapi/v5/places/search?keyword={keywords}&location={geo_data[0]},'
-        f'{geo_data[1]}&categorycodes=ATTRACTION&radius={search_radius}&numberOfResult={int(number_of_result)}'
-        f'&pagenumber={int(page)}', headers=headers)
+        f'{geo_data[1]}&categorycodes=ATTRACTION&provinceName={provincename}&radius={search_radius}&numberOfResult='
+        f'{int(number_of_result)}&pagenumber={int(page)}&destination={destination}', headers=headers)
 
     if response.status_code == 404:
         abort(404)
 
     json_result = response.json()
     result = [
-        models.AttractionSearchResult(i['place_id'], i['latitude'], i['longitude'], i['destination'],
-                                      i['thumbnail_url'], i['location'])
-        for i in json_result['result']
+        models.AttractionSearchResult(result['place_id'], result['latitude'], result['longitude'], result['destination'],
+                                      result['thumbnail_url'], result['location'])
+        for result in json_result['result']
     ]
     return result
 
