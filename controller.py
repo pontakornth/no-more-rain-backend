@@ -38,7 +38,7 @@ def search(keywords, geolocation, provincename, destination, search_radius=20, n
     geo_data = geolocation.split(",")
     headers = {
         "Authorization": f"Bearer {TAT_API_KEY}",
-        "Accept-Language": "EN"
+        "Accept-Language": "TH"
     }
     response = requests.get(
         f'https://tatapi.tourismthailand.org/tatapi/v5/places/search?keyword={keywords}&location={geo_data[0]},'
@@ -66,7 +66,7 @@ def get_attraction_detail(attraction_id: str):
     # TAT API request
     tat_headers = {
         "Authorization": f"Bearer {TAT_API_KEY}",
-        "Accept-Language": "EN"
+        "Accept-Language": "TH"
     }
     tat_response = requests.get(f'https://tatapi.tourismthailand.org/tatapi/v5/attraction/{attraction_id}',
                                 headers=tat_headers)
