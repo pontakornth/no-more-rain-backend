@@ -82,6 +82,8 @@ def get_attraction_detail(attraction_id: str):
     thumbnail_url = tat_response_json['result']['thumbnail_url']
     location = tat_response_json['result']['location']
     contact = tat_response_json['result']['contact']
+    place_introduction = tat_response_json['result']['place_information']['introduction']
+    place_information = tat_response_json['result']['place_information']['detail']
 
     # TMD API request
     tmd_headers = {
@@ -129,6 +131,6 @@ def get_attraction_detail(attraction_id: str):
                              pm10_data[index][1], cond_data[index])
         for index in range(7)
     ]
-    detail_result = models.AttractionDetailResult(place_id, place_name, lat, lon, destination, thumbnail_url, location, contact,
+    detail_result = models.AttractionDetailResult(place_id, place_name, place_introduction, place_information, lat, lon, destination, thumbnail_url, location, contact,
                                                   forecasts_result)
     return detail_result
