@@ -105,6 +105,10 @@ components:
           type: string
         place_name:
           type: string
+        place_information:
+          type: string
+        place_detail:
+          type: string
         latitude:
           type: number
         longitude:
