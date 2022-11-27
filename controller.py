@@ -90,15 +90,17 @@ def get_attraction_detail(attraction_id: str):
     }
     tmd_response = requests.get(
         f'https://data.tmd.go.th/nwpapi/v1/forecast/location/daily/at?lat={lat}&lon={lon}&fields=tc_max,'
-        f'tc_min&duration=7', headers=tmd_headers)
+        f'tc_min,cond&duration=7', headers=tmd_headers)
     if tmd_response.status_code == 404:
         abort(404)
     tmd_response_json = tmd_response.json()
     tc_max_data = []
     tc_min_data = []
+    cond_data = []
     for forecast_weather_data in tmd_response_json['WeatherForecasts'][0]['forecasts']:
         tc_max_data.append(forecast_weather_data['data']['tc_max'])
         tc_min_data.append(forecast_weather_data['data']['tc_min'])
+        cond_data.append(forecast_weather_data['data']['cond'])
 
     now = datetime.now()
     date = now.strftime("%Y-%m-%d")
@@ -124,7 +126,7 @@ def get_attraction_detail(attraction_id: str):
 
     forecasts_result = [
         models.WeatherDetail(pm10_data[index][0], tc_max_data[index], tc_min_data[index], pm25_data[index][1],
-                             pm10_data[index][1])
+                             pm10_data[index][1], cond_data[index])
         for index in range(7)
     ]
     detail_result = models.AttractionDetailResult(place_id, place_name, lat, lon, destination, thumbnail_url, location, contact,

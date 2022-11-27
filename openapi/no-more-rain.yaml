@@ -137,3 +137,5 @@ components:
           type: number
         avg_pm10:
           type: number
+        weather_cond:
+          type: number
