@@ -120,9 +120,7 @@ components:
         location:
           type: object
         contact:
-          type: array
-          items:
-            type: string
+          type: object
         forecasts:
           type: array
           items:
